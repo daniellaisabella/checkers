@@ -1,8 +1,8 @@
 import pygame
 import sys
 
-from board import ROWS, COLS, SQUARE_SIZE
-from game import Game
+from checkersgame.logic.board import ROWS, COLS, SQUARE_SIZE
+from checkersgame.logic.game import Game
 
 WIDTH = COLS * SQUARE_SIZE
 HEIGHT = ROWS * SQUARE_SIZE
