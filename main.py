@@ -11,10 +11,13 @@ HEIGHT = ROWS * SQUARE_SIZE
 FPS = 60
 
 
-def get_row_col_from_mouse(pos):
+def get_row_col_from_mouse(pos, flipped=False):
     x, y = pos
     row = y // SQUARE_SIZE
     col = x // SQUARE_SIZE
+    if flipped:
+        row = ROWS - 1 - row
+        col = COLS - 1 - col
     return row, col
 
 
@@ -29,23 +32,54 @@ def main():
     running = True
     while running:
         clock.tick(FPS)
+        side_panel.set_settings_locked(game.has_started)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
-                if side_panel.handle_click(pos):
+                panel_action = side_panel.handle_click(pos)
+                if panel_action == "restart":
+                    game.reset()
                     game.set_ai_preferences(
                         player_color=side_panel.settings.player_color,
-                        search_mode=side_panel.settings.search_mode,
+                        search_mode="both",
                         depth=side_panel.settings.depth,
                         time_seconds=side_panel.settings.time_seconds,
+                        forced_jump=side_panel.settings.forced_jump,
                     )
+                    game.set_board_flipped(side_panel.settings.board_flipped)
                     continue
 
-                row, col = get_row_col_from_mouse(pos)
+                if panel_action == "settings":
+                    game.set_ai_preferences(
+                        player_color=side_panel.settings.player_color,
+                        search_mode="both",
+                        depth=side_panel.settings.depth,
+                        time_seconds=side_panel.settings.time_seconds,
+                        forced_jump=side_panel.settings.forced_jump,
+                    )
+                    game.set_board_flipped(side_panel.settings.board_flipped)
+                    continue
+
+                if panel_action == "panel":
+                    continue
+
+                row, col = get_row_col_from_mouse(pos, flipped=side_panel.settings.board_flipped)
                 if 0 <= row < ROWS and 0 <= col < COLS:
                     game.select(row, col)
+
+            elif event.type == pygame.KEYDOWN:
+                if side_panel.handle_keydown(event):
+                    game.set_ai_preferences(
+                        player_color=side_panel.settings.player_color,
+                        search_mode="both",
+                        depth=side_panel.settings.depth,
+                        time_seconds=side_panel.settings.time_seconds,
+                        forced_jump=side_panel.settings.forced_jump,
+                    )
+                    game.set_board_flipped(side_panel.settings.board_flipped)
+                    continue
 
         game.update(win)
         side_panel.draw(win)

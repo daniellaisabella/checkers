@@ -33,6 +33,7 @@ class Board:
         self.black_kings = self.white_kings = 0
         # Brættet og brikkerne læses fra assets og skaleres til den faste størrelse.
         self.board_image = self._load_image("Board_Checkers_x2.png", (COLS * SQUARE_SIZE, ROWS * SQUARE_SIZE))
+        self.flipped_board_image = pygame.transform.rotate(self.board_image, 180)
         self.black_piece_image = self._load_image("Stone_Black_x2.png", (SQUARE_SIZE, SQUARE_SIZE))
         self.white_piece_image = self._load_image("Stone_White_x2.png", (SQUARE_SIZE, SQUARE_SIZE))
         self.black_king_image = self._load_image("Stone_Black_2_x2.png", (SQUARE_SIZE, SQUARE_SIZE))
@@ -46,9 +47,10 @@ class Board:
         return pygame.transform.smoothscale(image, size)
 
     # Her tegnes baggrunden/brættet
-    def draw_squares(self, win):
+    def draw_squares(self, win, flipped=False):
         # Baggrunden er et færdigtegnet bræt, så vi blitter det direkte.
-        win.blit(self.board_image, (0, 0))
+        image = self.flipped_board_image if flipped else self.board_image
+        win.blit(image, (0, 0))
 
     # Opretter startopstillingen placrer sorte brikker på række 0-2 og hvor på 5-7
 
@@ -67,20 +69,22 @@ class Board:
                 else:
                     self.board[row].append(None)
 
-    def draw(self, win): # win betyder vinduet/surface som vi tegner på, og det kommer fra main.py hvor vi har oprettet et Pygame vindue.
+    def draw(self, win, flipped=False): # win betyder vinduet/surface som vi tegner på, og det kommer fra main.py hvor vi har oprettet et Pygame vindue.
         # Tegn først brættet og derefter alle aktive brikker ovenpå.
-        self.draw_squares(win) # 
+        self.draw_squares(win, flipped=flipped) # 
         for row in range(ROWS):
             for col in range(COLS):
                 piece = self.board[row][col]
                 if piece is not None:
-                    self.draw_piece(win, piece)
+                    self.draw_piece(win, piece, flipped=flipped)
 
-    def draw_piece(self, win, piece):
+    def draw_piece(self, win, piece, flipped=False):
         # Vælg den korrekte sprite ud fra side og om brikken er en king.
         # tegner én brik på de trigtige pixel kooridnat
-        x = piece.col * SQUARE_SIZE
-        y = piece.row * SQUARE_SIZE
+        draw_col = COLS - 1 - piece.col if flipped else piece.col
+        draw_row = ROWS - 1 - piece.row if flipped else piece.row
+        x = draw_col * SQUARE_SIZE
+        y = draw_row * SQUARE_SIZE
         if piece.color == PieceColor.BLACK:
             image = self.black_king_image if piece.king else self.black_piece_image
         else:
