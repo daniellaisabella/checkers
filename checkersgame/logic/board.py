@@ -54,6 +54,8 @@ class Board:
 
     # Opretter startopstillingen placrer sorte brikker på række 0-2 og hvor på 5-7
 
+    # Opretter startopstillingen placrer sorte brikker på række 0-2 og hvor på 5-7
+
     def create_board(self):
         # Opret den standardiserede startopstilling: sorte øverst, hvide nederst.
         for row in range(ROWS):
