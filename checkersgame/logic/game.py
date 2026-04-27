@@ -15,11 +15,20 @@ class Game:
         self.board = Board()
         self.turn = PieceColor.BLACK
         self.valid_moves = {}
+        self.player_color = PieceColor.BLACK
+        self.search_mode = "depth"
+        self.search_depth = 4
+        self.search_time_seconds = 1.0
 
     def update(self, win):
         self.board.draw(win)
         self.draw_valid_moves(win)
-        pygame.display.update()
+
+    def set_ai_preferences(self, player_color, search_mode, depth, time_seconds):
+        self.player_color = player_color
+        self.search_mode = search_mode
+        self.search_depth = depth
+        self.search_time_seconds = time_seconds
 
     def reset(self):
         self._init()
