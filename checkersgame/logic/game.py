@@ -3,7 +3,14 @@ import pygame
 from .board import Board, SQUARE_SIZE
 from .pieces import PieceColor
 
-HIGHLIGHT_COLOR = (0, 255, 0)
+HIGHLIGHT_COLOR = (0, 255, 0) # farven for at fremhæve gyldige træk på brættet, i dette tilfælde grøn.
+
+# Dette modul indeholder Game-klassen, 
+# som håndterer den overordnede spillogik, 
+# spillerens tur, 
+# valg af brikker og gyldige træk. 
+# Den bruger Board-klassen til at interagere med brættet og brikkerne, 
+# og den håndterer også tegningen af gyldige træk på skærmen. 
 
 class Game:
     def __init__(self):
@@ -68,18 +75,20 @@ class Game:
             skipped = self.valid_moves[(row, col)]
             if skipped:
                 self.board.remove(skipped)
+                # tjek om brikken kan hoppe igen:
                 next_moves = self._capture_only(self.board.get_valid_moves(self.selected))
                 if next_moves:
-                    self.forced_piece = self.selected
+                    self.forced_piece = self.selected 
                     self.valid_moves = next_moves
                     return True
 
             self.change_turn()
+        
             return True
         return False
 
     def draw_valid_moves(self, win):
-        for move in self.valid_moves:
+        for move in self.valid_moves: # self.valid.moves kommer fra Board-klassen
             row, col = move
             pygame.draw.circle(
                 win,
@@ -94,5 +103,5 @@ class Game:
     def change_turn(self):
         self.selected = None
         self.forced_piece = None
-        self.valid_moves = {}
+        self.valid_moves = {} # denne linje rydder gyldige træk, når turen skifter
         self.turn = PieceColor.WHITE if self.turn == PieceColor.BLACK else PieceColor.BLACK

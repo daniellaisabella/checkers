@@ -1,5 +1,6 @@
 from enum import Enum
 
+# Dette modul indeholder Piece-klassen, som repræsenterer en enkelt brik på brættet,
 
 class PieceColor(Enum):
     # Farven beskriver hvilken side en brik tilhører.
