@@ -20,13 +20,38 @@ class Game:
         self.selected = None
         self.forced_piece = None
         self.board = Board()
+        self.board_flipped = False
+        self.has_started = False
         self.turn = PieceColor.BLACK
         self.valid_moves = {}
+        self.player_color = PieceColor.BLACK
+        self.search_mode = "both"
+        self.search_depth = 4
+        self.search_time_seconds = 1.0
+        self.force_capture = True
 
     def update(self, win):
-        self.board.draw(win)
-        self.draw_valid_moves(win)
-        pygame.display.update()
+        self.board.draw(win, flipped=self.board_flipped)
+        self.draw_valid_moves(win, flipped=self.board_flipped)
+
+    def set_board_flipped(self, board_flipped):
+        self.board_flipped = board_flipped
+
+    def set_ai_preferences(self, player_color, search_mode, depth, time_seconds, forced_jump=True):
+        color_changed = player_color != self.player_color
+        self.player_color = player_color
+        self.search_mode = search_mode
+        self.search_depth = depth
+        self.search_time_seconds = time_seconds
+        self.force_capture = forced_jump
+
+        # Når spilleren skifter farve i menuen, skifter vi også aktiv tur,
+        # så man med det samme kan lave træk med den valgte farve.
+        if color_changed:
+            self.turn = self.player_color
+            self.selected = None
+            self.forced_piece = None
+            self.valid_moves = {}
 
     def reset(self):
         self._init()
@@ -50,7 +75,7 @@ class Game:
             return False
 
         moves = self.board.get_valid_moves(piece)
-        if self._player_has_capture(self.turn):
+        if self.force_capture and self._player_has_capture(self.turn):
             moves = self._capture_only(moves)
             if not moves:
                 return False
@@ -72,6 +97,7 @@ class Game:
     def _move(self, row, col):
         if self.selected and (row, col) in self.valid_moves:
             self.board.move(self.selected, row, col)
+            self.has_started = True
             skipped = self.valid_moves[(row, col)]
             if skipped:
                 self.board.remove(skipped)
@@ -87,15 +113,17 @@ class Game:
             return True
         return False
 
-    def draw_valid_moves(self, win):
+    def draw_valid_moves(self, win, flipped=False):
         for move in self.valid_moves: # self.valid.moves kommer fra Board-klassen
             row, col = move
+            draw_col = 7 - col if flipped else col
+            draw_row = 7 - row if flipped else row
             pygame.draw.circle(
                 win,
                 HIGHLIGHT_COLOR,
                 (
-                    col * SQUARE_SIZE + SQUARE_SIZE // 2,
-                    row * SQUARE_SIZE + SQUARE_SIZE // 2,
+                    draw_col * SQUARE_SIZE + SQUARE_SIZE // 2,
+                    draw_row * SQUARE_SIZE + SQUARE_SIZE // 2,
                 ),
                 10,
             )
