@@ -72,11 +72,11 @@ def minmax(position, depth, maximizing_player, alpha, beta):
 
         for childnode in children:
             value = minmax(childnode, depth - 1, False, alpha, beta)[0]
-            maxEval = max(maxEval, value)
-            if maxEval == value:
+            if value > maxEval:
+                maxEval = value
                 bestMaxPosition = childnode
-            alpha = max(alpha, maxEval)
-            if alpha >= beta:
+            alpha = max(alpha, value)
+            if beta <= alpha:
                 break
         return maxEval, bestMaxPosition
     
@@ -89,11 +89,11 @@ def minmax(position, depth, maximizing_player, alpha, beta):
 
         for childnode in children:
             value = minmax(childnode, depth - 1, True, alpha, beta)[0]
-            minEval = min(minEval, value)
-            beta = min(beta, minEval)
-            if minEval == value:
+            if value < minEval:
+                minEval = value
                 bestMinPosition = childnode
-            if alpha >= beta:
+            beta = min(beta, value)
+            if beta <= alpha:
                 break
         return minEval, bestMinPosition
 
