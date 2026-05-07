@@ -145,6 +145,10 @@ class Game:
             )
 
     def change_turn(self):
+        if self.board.winner() is not None:
+            print(self.board.winner())
+            return 
+        
         self.selected = None
         self.forced_piece = None
         self.valid_moves = {} # denne linje rydder gyldige træk, når turen skifter

@@ -128,10 +128,10 @@ class Board:
                     self.white_left -= 1
 
     def winner(self):
-        if self.black_left <= 0:
-            return "WHITE"
-        elif self.white_left <= 0:
-            return "BLACK"
+        if self.black_left <= 0 or not self.check_if_valid_move(PieceColor.BLACK):
+            return "WHITE WINS" 
+        elif self.white_left <= 0 or not self.check_if_valid_move(PieceColor.WHITE):
+            return "BLACK WINS"
         return None
 
     def get_valid_moves(self, piece):
@@ -150,6 +150,13 @@ class Board:
             moves.update(self._traverse_right(row + 1, min(row + 3, ROWS), 1, piece.color, right))
 
         return moves
+    
+    def check_if_valid_move(self, color):
+
+        for piece in self.get_all_pieces(color):
+            if self.get_valid_moves(piece):
+                return True
+        return False
 
     def _traverse_left(self, start, stop, step, color, left, skipped=None):
         # Rekursiv søgning mod venstre, som også understøtter kædespring.

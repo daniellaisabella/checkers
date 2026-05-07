@@ -2,7 +2,7 @@ from ..logic.pieces import PieceColor
 from ..logic.pieces import Piece
 from ..logic.board import Board
 
-# Array of weights for white for static evalution function ... test test
+# Array of weights for white for static evalution function ...
 WHITE_WEIGHTS = [
     [0, 4, 0, 4, 0, 4, 0, 4],
     [2, 0, 3, 0, 3, 0, 2, 0],
@@ -37,15 +37,15 @@ def evaluate(board_state):
             if piece is not None:
                 if piece.color == PieceColor.WHITE:
                     if piece.king: 
-                        score += 2
-                    score += 1
+                        score += 15
+                    score += 10
                     piece_score = WHITE_WEIGHTS[piece.row][piece.col]
                     score += piece_score
                 else:
                     if piece.color == PieceColor.BLACK:
                         if piece.king:
-                            score -= 2
-                        score -= 1
+                            score -= 15
+                        score -= 10
                     piece_score = BLACK_WEIGHTS[piece.row][piece.col]
                     score += piece_score
     return score
