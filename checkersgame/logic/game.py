@@ -1,5 +1,6 @@
 import pygame
-
+from ..ai.minmax import minmax
+from ..ai.minmax import evaluate
 from .board import Board, SQUARE_SIZE
 from .pieces import PieceColor
 
@@ -112,7 +113,22 @@ class Game:
         
             return True
         return False
+    
 
+    def ai_move(self):
+        maximizing_player = self.turn == PieceColor.WHITE
+        _, best_board_state = minmax(self.board, self.search_depth, maximizing_player, float('-inf'), float('inf'))
+
+        if best_board_state is None:
+            return False
+
+        self.board = best_board_state
+        self.has_started = True
+        self.change_turn()
+        return True
+        
+
+# tegne
     def draw_valid_moves(self, win, flipped=False):
         for move in self.valid_moves: # self.valid.moves kommer fra Board-klassen
             row, col = move
@@ -129,7 +145,16 @@ class Game:
             )
 
     def change_turn(self):
+        if self.board.winner() is not None:
+            print(self.board.winner())
+            return 
+        
         self.selected = None
         self.forced_piece = None
         self.valid_moves = {} # denne linje rydder gyldige træk, når turen skifter
         self.turn = PieceColor.WHITE if self.turn == PieceColor.BLACK else PieceColor.BLACK
+
+        print(evaluate(self.board))
+
+        if self.turn != self.player_color and self.board.winner() is None:
+            self.ai_move()
