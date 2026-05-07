@@ -29,7 +29,12 @@ BLACK_WEIGHTS = [
 
 
 # evaluate the board state and return a score
-def evaluate(board_state):
+def evaluate(board_state, depth=0):
+    winner = board_state.winner()
+    if winner == "WHITE WINS":
+        return 1000000 + depth  # Vinde hurtigere får højere score
+    elif winner == "BLACK WINS":
+        return -1000000 - depth
     # simple static evaluation function: count the pieces
     score = 0
     for row in board_state.board:
@@ -51,28 +56,66 @@ def evaluate(board_state):
     return score
 
 
-def minmax(position, depth, maximizing_player):
+def minmax(position, depth, maximizing_player, alpha, beta):
+
+    #hvis node = leaf, returnér static value
     if depth == 0:
-        return evaluate(position), position
+        return evaluate(position, depth), position
+    
 
     if maximizing_player:
-        max_eval = -10000
-        best_board_state = None
-        for next_board_state in get_valid_moves(position, PieceColor.WHITE):
-            evaluation = minmax(next_board_state, depth - 1, False)[0]
-            max_eval = max(max_eval, evaluation)
-            if max_eval == evaluation:
-                best_board_state = next_board_state
-        return max_eval, best_board_state
+        maxEval = float('-inf')
+        bestMaxPosition = None
+        children = get_valid_moves(position, PieceColor.WHITE)
+        if not children:
+            return evaluate(position, depth), position
+
+        for childnode in children:
+            value = minmax(childnode, depth - 1, False, alpha, beta)[0]
+            maxEval = max(maxEval, value)
+            if maxEval == value:
+                bestMaxPosition = childnode
+            alpha = max(alpha, maxEval)
+            if alpha >= beta:
+                break
+        return maxEval, bestMaxPosition
+    
     else:
-        min_eval = 10000
-        best_board_state = None
-        for next_board_state in get_valid_moves(position, PieceColor.BLACK):
-            evaluation = minmax(next_board_state, depth - 1, True)[0]
-            min_eval = min(min_eval, evaluation)
-            if min_eval == evaluation:
-                best_board_state = next_board_state
-        return min_eval, best_board_state
+        minEval = float('inf')
+        bestMinPosition = None
+        children = get_valid_moves(position, PieceColor.BLACK)
+        if not children:
+            return evaluate(position, depth), position
+
+        for childnode in children:
+            value = minmax(childnode, depth - 1, True, alpha, beta)[0]
+            minEval = min(minEval, value)
+            beta = min(beta, minEval)
+            if minEval == value:
+                bestMinPosition = childnode
+            if alpha >= beta:
+                break
+        return minEval, bestMinPosition
+
+
+    # if maximizing_player:
+    #     max_eval = -1000000000
+    #     best_board_state = None
+    #     for next_child in get_valid_moves(position, PieceColor.WHITE):
+    #         evaluation = minmax(next_child, depth - 1, False)[0]
+    #         alpha = max(max_eval, evaluation)
+    #         if max_eval == evaluation:
+    #             best_board_state = next_child
+    #     return max_eval, best_board_state
+    # else:
+    #     min_eval = 1000000000
+    #     best_board_state = None
+    #     for next_child in get_valid_moves(position, PieceColor.BLACK):
+    #         evaluation = minmax(next_child, depth - 1, True)[0]
+    #         min_eval = min(min_eval, evaluation)
+    #         if min_eval == evaluation:
+    #             best_board_state = next_child
+    #     return min_eval, best_board_state
 
 
 def clone_board_state(source_board):

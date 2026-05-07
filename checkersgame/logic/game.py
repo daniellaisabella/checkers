@@ -117,7 +117,7 @@ class Game:
 
     def ai_move(self):
         maximizing_player = self.turn == PieceColor.WHITE
-        _, best_board_state = minmax(self.board, self.search_depth, maximizing_player)
+        _, best_board_state = minmax(self.board, self.search_depth, maximizing_player, float('-inf'), float('inf'))
 
         if best_board_state is None:
             return False
