@@ -56,67 +56,47 @@ def evaluate(board_state, depth=0):
     return score
 
 
-def minmax(position, depth, maximizing_player, alpha, beta):
+def minmax(position, depth, maximizing_player, alpha, beta, force_capture=True):
 
     #hvis node = leaf, returnér static value
-    if depth == 0:
+    if depth == 0 or position.winner() is not None:
         return evaluate(position, depth), position
     
 
     if maximizing_player:
         maxEval = float('-inf')
         bestMaxPosition = None
-        children = get_valid_moves(position, PieceColor.WHITE)
+        children = get_valid_moves(position, PieceColor.WHITE, force_capture)
         if not children:
             return evaluate(position, depth), position
 
         for childnode in children:
-            value = minmax(childnode, depth - 1, False, alpha, beta)[0]
-            maxEval = max(maxEval, value)
-            if maxEval == value:
+            value = minmax(childnode, depth - 1, False, alpha, beta, force_capture)[0]
+            if value > maxEval:
+                maxEval = value
                 bestMaxPosition = childnode
             alpha = max(alpha, maxEval)
-            if alpha >= beta:
+            if beta <= alpha:
                 break
         return maxEval, bestMaxPosition
     
     else:
         minEval = float('inf')
         bestMinPosition = None
-        children = get_valid_moves(position, PieceColor.BLACK)
+        children = get_valid_moves(position, PieceColor.BLACK, force_capture)
         if not children:
             return evaluate(position, depth), position
 
         for childnode in children:
-            value = minmax(childnode, depth - 1, True, alpha, beta)[0]
-            minEval = min(minEval, value)
-            beta = min(beta, minEval)
-            if minEval == value:
+            value = minmax(childnode, depth - 1, True, alpha, beta, force_capture)[0]
+            if value < minEval:
+                minEval = value
                 bestMinPosition = childnode
-            if alpha >= beta:
+            beta = min(beta, minEval)
+            if beta <= alpha:
                 break
         return minEval, bestMinPosition
 
-
-    # if maximizing_player:
-    # hejtest
-    #     max_eval = -1000000000
-    #     best_board_state = None
-    #     for next_child in get_valid_moves(position, PieceColor.WHITE):
-    #         evaluation = minmax(next_child, depth - 1, False)[0]
-    #         alpha = max(max_eval, evaluation)
-    #         if max_eval == evaluation:
-    #             best_board_state = next_child
-    #     return max_eval, best_board_state
-    # else:
-    #     min_eval = 1000000000
-    #     best_board_state = None
-    #     for next_child in get_valid_moves(position, PieceColor.BLACK):
-    #         evaluation = minmax(next_child, depth - 1, True)[0]
-    #         min_eval = min(min_eval, evaluation)
-    #         if min_eval == evaluation:
-    #             best_board_state = next_child
-    #     return min_eval, best_board_state
 
 
 def clone_board_state(source_board):
@@ -149,26 +129,86 @@ def clone_board_state(source_board):
         cloned_board.board.append(cloned_row)
 
     return cloned_board
-    
-def get_valid_moves(current_board_state, color):
+
+
+def _capture_only(moves):
+    return {move: skipped for move, skipped in moves.items() if skipped}
+
+
+def _apply_move(board_state, piece, move_row, move_col, skipped):
+    next_board_state = clone_board_state(board_state)
+    piece_copy = next_board_state.get_piece(piece.row, piece.col)
+    next_board_state.move(piece_copy, move_row, move_col)
+
+    if skipped:
+        skipped_pieces_on_copy = []
+        for skipped_piece in skipped:
+            copied_skipped_piece = next_board_state.get_piece(skipped_piece.row, skipped_piece.col)
+            if copied_skipped_piece is not None:
+                skipped_pieces_on_copy.append(copied_skipped_piece)
+        next_board_state.remove(skipped_pieces_on_copy)
+
+    return next_board_state, piece_copy
+
+
+def _expand_capture_sequences(board_state, piece, capture_moves=None):
+    if capture_moves is None:
+        capture_moves = _capture_only(board_state.get_valid_moves(piece))
+
+    if not capture_moves:
+        return [board_state]
+
     next_board_states = []
+    for (move_row, move_col), skipped in capture_moves.items():
+        next_board_state, piece_copy = _apply_move(board_state, piece, move_row, move_col, skipped)
+        next_capture_moves = _capture_only(next_board_state.get_valid_moves(piece_copy))
+
+        if next_capture_moves:
+            next_board_states.extend(
+                _expand_capture_sequences(next_board_state, piece_copy, next_capture_moves)
+            )
+        else:
+            next_board_states.append(next_board_state)
+
+    return next_board_states
+
+
+def get_valid_moves(current_board_state, color, force_capture=True):
+    next_board_states = []
+    capture_entries = []
+    normal_entries = []
+
     for row in current_board_state.board:
         for piece in row:
-            if piece is not None and piece.color == color:
-                piece_valid_moves = current_board_state.get_valid_moves(piece)
-                for (move_row, move_col), skipped in piece_valid_moves.items():
-                    next_board_state = clone_board_state(current_board_state)
-                    piece_copy = next_board_state.get_piece(piece.row, piece.col)
-                    next_board_state.move(piece_copy, move_row, move_col)
+            if piece is None or piece.color != color:
+                continue
 
-                    if skipped:
-                        skipped_pieces_on_copy = []
-                        for skipped_piece in skipped:
-                            copied_skipped_piece = next_board_state.get_piece(skipped_piece.row, skipped_piece.col)
-                            if copied_skipped_piece is not None:
-                                skipped_pieces_on_copy.append(copied_skipped_piece)
-                        next_board_state.remove(skipped_pieces_on_copy)
+            piece_valid_moves = current_board_state.get_valid_moves(piece)
+            if not piece_valid_moves:
+                continue
 
-                    next_board_states.append(next_board_state)
+            capture_moves = _capture_only(piece_valid_moves)
+            if capture_moves:
+                capture_entries.append((piece, capture_moves))
+            else:
+                normal_entries.append((piece, piece_valid_moves))
+
+    if force_capture and capture_entries:
+        for piece, capture_moves in capture_entries:
+            next_board_states.extend(
+                _expand_capture_sequences(current_board_state, piece, capture_moves)
+            )
+        return next_board_states
+
+    for piece, piece_valid_moves in normal_entries:
+        for (move_row, move_col), skipped in piece_valid_moves.items():
+            next_board_state, _ = _apply_move(current_board_state, piece, move_row, move_col, skipped)
+            next_board_states.append(next_board_state)
+
+    for piece, capture_moves in capture_entries:
+        next_board_states.extend(
+            _expand_capture_sequences(current_board_state, piece, capture_moves)
+        )
+
     return next_board_states
 
