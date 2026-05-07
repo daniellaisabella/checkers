@@ -2,7 +2,7 @@ from ..logic.pieces import PieceColor
 from ..logic.pieces import Piece
 from ..logic.board import Board
 
-# Array of weights for white for static evalution function
+# Array of weights for white for static evalution function ... test test
 WHITE_WEIGHTS = [
     [0, 4, 0, 4, 0, 4, 0, 4],
     [2, 0, 3, 0, 3, 0, 2, 0],
