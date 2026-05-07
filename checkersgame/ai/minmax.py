@@ -99,6 +99,7 @@ def minmax(position, depth, maximizing_player, alpha, beta):
 
 
     # if maximizing_player:
+    # hejtest
     #     max_eval = -1000000000
     #     best_board_state = None
     #     for next_child in get_valid_moves(position, PieceColor.WHITE):
