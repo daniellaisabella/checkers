@@ -3,6 +3,7 @@ import sys
 
 from checkersgame.logic.board import ROWS, COLS, SQUARE_SIZE
 from checkersgame.logic.game import Game
+from checkersgame.logic.pieces import PieceColor
 from checkersgame.ui.side_panel import PANEL_WIDTH, SidePanel
 
 BOARD_WIDTH = COLS * SQUARE_SIZE
@@ -33,12 +34,18 @@ def main():
     while running:
         clock.tick(FPS)
         side_panel.set_settings_locked(game.has_started)
+        side_panel.set_start_button_visible(
+            not game.has_started and side_panel.settings.player_color == PieceColor.WHITE
+        )
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
                 panel_action = side_panel.handle_click(pos)
+                if panel_action == "start":
+                    game.start_game()
+                    continue
                 if panel_action == "restart":
                     game.reset()
                     game.set_ai_preferences(
@@ -81,6 +88,10 @@ def main():
                     game.set_board_flipped(side_panel.settings.board_flipped)
                     continue
 
+        side_panel.set_settings_locked(game.has_started)
+        side_panel.set_start_button_visible(
+            not game.has_started and side_panel.settings.player_color == PieceColor.WHITE
+        )
         game.update(win)
         side_panel.draw(win)
 
