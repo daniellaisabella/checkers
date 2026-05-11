@@ -146,6 +146,7 @@ class SidePanel:
         self.rect = pygame.Rect(board_width, 0, PANEL_WIDTH, height)
         self.settings = PanelSettings()
         self.settings_locked = False
+        self.start_button_visible = False
 
         self.title_font = pygame.font.SysFont("georgia", 34, bold=True)
         self.header_font = pygame.font.SysFont("georgia", 24, bold=True)
@@ -161,6 +162,7 @@ class SidePanel:
         self.color_buttons = self._build_color_buttons()
         self.depth_input, self.time_input = self._build_input_fields()
         self.forced_jump_button = self._build_forced_jump_button()
+        self.start_button = self._build_start_button()
         self.flip_button = self._build_flip_button()
         self.restart_button = self._build_restart_button()
 
@@ -172,6 +174,9 @@ class SidePanel:
         self.settings_locked = locked
         if locked:
             self._clear_input_focus()
+
+    def set_start_button_visible(self, visible):
+        self.start_button_visible = visible
 
     def _load_image(self, name, size):
         image = pygame.image.load(str(ASSETS_DIR / name)).convert_alpha()
@@ -202,6 +207,13 @@ class SidePanel:
         width = PANEL_WIDTH - 40
         height = 42
         return SpriteButton((x, y, width, height), "Forced jump: ON", "forced_jump")
+
+    def _build_start_button(self):
+        x = self.board_width + 20
+        y = 472
+        width = PANEL_WIDTH - 40
+        height = 44
+        return SpriteButton((x, y, width, height), "Start spil", "start")
 
     def _build_flip_button(self):
         x = self.board_width + 20
@@ -274,6 +286,9 @@ class SidePanel:
         self.depth_input.draw(win, self.meta_font, self.body_font, disabled=self.settings_locked)
         self.time_input.draw(win, self.meta_font, self.body_font, disabled=self.settings_locked)
 
+        if self.start_button_visible:
+            self.start_button.draw(win, self.body_font)
+
         self.flip_button.draw(win, self.body_font, selected=self.settings.board_flipped)
         self.restart_button.draw(win, self.body_font)
 
@@ -327,6 +342,10 @@ class SidePanel:
         if self.restart_button.contains(pos):
             self._clear_input_focus()
             return "restart"
+
+        if self.start_button_visible and self.start_button.contains(pos):
+            self._clear_input_focus()
+            return "start"
 
         self._clear_input_focus()
         return "panel"

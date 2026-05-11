@@ -23,6 +23,7 @@ class Game:
         self.board = Board()
         self.board_flipped = False
         self.has_started = False
+        self.awaiting_start = False
         self.turn = PieceColor.BLACK
         self.valid_moves = {}
         self.player_color = PieceColor.BLACK
@@ -39,25 +40,33 @@ class Game:
         self.board_flipped = board_flipped
 
     def set_ai_preferences(self, player_color, search_mode, depth, time_seconds, forced_jump=True):
-        color_changed = player_color != self.player_color
         self.player_color = player_color
         self.search_mode = search_mode
         self.search_depth = depth
         self.search_time_seconds = time_seconds
         self.force_capture = forced_jump
+        self.awaiting_start = not self.has_started and self.player_color == PieceColor.WHITE
 
-        # Når spilleren skifter farve i menuen, skifter vi også aktiv tur,
-        # så man med det samme kan lave træk med den valgte farve.
-        if color_changed:
-            self.turn = self.player_color
-            self.selected = None
-            self.forced_piece = None
-            self.valid_moves = {}
+        # Sort starter altid, så turen nulstilles til sort ved nye indstillinger.
+        self.turn = PieceColor.BLACK
+        self.selected = None
+        self.forced_piece = None
+        self.valid_moves = {}
+
+    def start_game(self):
+        if not self.awaiting_start or self.board.winner() is not None:
+            return False
+
+        self.awaiting_start = False
+        return self.ai_move()
 
     def reset(self):
         self._init()
 
     def select(self, row, col):
+        if self.awaiting_start:
+            return False
+
         if self.selected:
             moved = self._move(row, col)
             if moved:
