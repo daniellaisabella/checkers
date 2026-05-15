@@ -29,8 +29,26 @@ class Game:
         self.player_color = PieceColor.BLACK
         self.search_mode = "both"
         self.search_depth = 4
-        self.search_time_seconds = 1.0
         self.force_capture = True
+        self.game_status = None  # None, 'WHITE WINS', 'BLACK WINS', 'STALEMATE'
+        self.repetition_counts = {}
+        self._record_repetition_state()
+
+    def _board_state_signature(self):
+        pieces = []
+        for row in self.board.board:
+            for piece in row:
+                if piece is None:
+                    pieces.append((None, None, None, None))
+                else:
+                    pieces.append((piece.color, piece.row, piece.col, piece.king))
+        return (self.turn, tuple(pieces))
+
+    def _record_repetition_state(self):
+        signature = self._board_state_signature()
+        self.repetition_counts[signature] = self.repetition_counts.get(signature, 0) + 1
+        if self.repetition_counts[signature] >= 3:
+            self.game_status = "STALEMATE"
 
     def update(self, win):
         self.board.draw(win, flipped=self.board_flipped)
@@ -39,11 +57,10 @@ class Game:
     def set_board_flipped(self, board_flipped):
         self.board_flipped = board_flipped
 
-    def set_ai_preferences(self, player_color, search_mode, depth, time_seconds, forced_jump=True):
+    def set_ai_preferences(self, player_color, search_mode, depth, forced_jump=True):
         self.player_color = player_color
         self.search_mode = search_mode
         self.search_depth = depth
-        self.search_time_seconds = time_seconds
         self.force_capture = forced_jump
         self.awaiting_start = not self.has_started and self.player_color == PieceColor.WHITE
 
@@ -54,7 +71,7 @@ class Game:
         self.valid_moves = {}
 
     def start_game(self):
-        if not self.awaiting_start or self.board.winner() is not None:
+        if not self.awaiting_start or self.game_status is not None:
             return False
 
         self.awaiting_start = False
@@ -64,7 +81,7 @@ class Game:
         self._init()
 
     def select(self, row, col):
-        if self.awaiting_start:
+        if self.awaiting_start or self.game_status is not None:
             return False
 
         if self.selected:
@@ -125,6 +142,9 @@ class Game:
     
 
     def ai_move(self):
+        if self.game_status is not None:
+            return False
+
         maximizing_player = self.turn == PieceColor.WHITE
         _, best_board_state = minmax(
             self.board,
@@ -161,15 +181,22 @@ class Game:
             )
 
     def change_turn(self):
-        if self.board.winner() is not None:
-            print(self.board.winner())
-            return 
-        
         self.selected = None
         self.forced_piece = None
         self.valid_moves = {} # denne linje rydder gyldige træk, når turen skifter
         self.turn = PieceColor.WHITE if self.turn == PieceColor.BLACK else PieceColor.BLACK
 
+        self._record_repetition_state()
+        if self.game_status == "STALEMATE":
+            print("GAME OVER: STALEMATE")
+            return
+
+        # Tjek game status efter turskift
+        self.game_status = self.board.get_game_status(self.turn)
+        if self.game_status is not None:
+            print(f"GAME OVER: {self.game_status}")
+            return 
+        
         print(evaluate(self.board))
 
         if self.turn != self.player_color and self.board.winner() is None:

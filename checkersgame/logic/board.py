@@ -127,10 +127,25 @@ class Board:
                 else:
                     self.white_left -= 1
 
+    def get_game_status(self, current_player_color):
+        """Returnerer game status: 'WHITE WINS', 'BLACK WINS', 'STALEMATE' eller None"""
+        # Først tjek om nogen har tabt alle brikker
+        if self.black_left <= 0:
+            return "WHITE WINS"
+        elif self.white_left <= 0:
+            return "BLACK WINS"
+        
+        # Tjek hvis nuværende spiller har ingen træk = stalemate
+        if not self.check_if_valid_move(current_player_color):
+            return "STALEMATE"
+        
+        return None
+
     def winner(self):
-        if self.black_left <= 0 or not self.check_if_valid_move(PieceColor.BLACK):
+        """Returnerer vinder kun hvis en spiller har tabt alle brikker"""
+        if self.black_left <= 0:
             return "WHITE WINS" 
-        elif self.white_left <= 0 or not self.check_if_valid_move(PieceColor.WHITE):
+        elif self.white_left <= 0:
             return "BLACK WINS"
         return None
 

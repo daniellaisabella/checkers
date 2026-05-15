@@ -42,17 +42,19 @@ def evaluate(board_state, depth=0):
             if piece is not None:
                 if piece.color == PieceColor.WHITE:
                     if piece.king: 
-                        score += 15
-                    score += 10
-                    piece_score = WHITE_WEIGHTS[piece.row][piece.col]
-                    score += piece_score
+                        score += 140
+                    else:
+                        score += 100
+                        piece_score = WHITE_WEIGHTS[piece.row][piece.col]
+                        score += piece_score
                 else:
                     if piece.color == PieceColor.BLACK:
                         if piece.king:
-                            score -= 15
-                        score -= 10
-                    piece_score = BLACK_WEIGHTS[piece.row][piece.col]
-                    score += piece_score
+                            score -= 140
+                        else:
+                            score -= 100
+                            piece_score = BLACK_WEIGHTS[piece.row][piece.col]
+                            score += piece_score
     return score
 
 
