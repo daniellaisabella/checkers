@@ -95,11 +95,17 @@ def main():
         game.update(win)
         side_panel.draw(win)
 
-        # Display winner message if game is over
-        winner = game.board.winner()
-        if winner is not None:
+        # Display game status (winner or stalemate)
+        if game.game_status is not None:
             font = pygame.font.SysFont('arial', 48, bold=True)
-            text_surface = font.render(winner, True, (255, 215, 0))  # Gold color
+            if game.game_status == "STALEMATE":
+                status_message = "STALEMATE"
+                color = (100, 149, 237)  # blue
+            else:
+                status_message = game.game_status
+                color = (255, 215, 0)  # Gold
+            
+            text_surface = font.render(status_message, True, color)
             text_rect = text_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2))
             win.blit(text_surface, text_rect)
 

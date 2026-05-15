@@ -31,6 +31,7 @@ class Game:
         self.search_depth = 4
         self.search_time_seconds = 1.0
         self.force_capture = True
+        self.game_status = None  # None, 'WHITE WINS', 'BLACK WINS', 'STALEMATE'
 
     def update(self, win):
         self.board.draw(win, flipped=self.board_flipped)
@@ -161,15 +162,17 @@ class Game:
             )
 
     def change_turn(self):
-        if self.board.winner() is not None:
-            print(self.board.winner())
-            return 
-        
         self.selected = None
         self.forced_piece = None
         self.valid_moves = {} # denne linje rydder gyldige træk, når turen skifter
         self.turn = PieceColor.WHITE if self.turn == PieceColor.BLACK else PieceColor.BLACK
 
+        # Tjek game status efter turskift
+        self.game_status = self.board.get_game_status(self.turn)
+        if self.game_status is not None:
+            print(f"GAME OVER: {self.game_status}")
+            return 
+        
         print(evaluate(self.board))
 
         if self.turn != self.player_color and self.board.winner() is None:
