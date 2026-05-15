@@ -52,7 +52,6 @@ def main():
                         player_color=side_panel.settings.player_color,
                         search_mode="both",
                         depth=side_panel.settings.depth,
-                        time_seconds=side_panel.settings.time_seconds,
                         forced_jump=side_panel.settings.forced_jump,
                     )
                     game.set_board_flipped(side_panel.settings.board_flipped)
@@ -63,7 +62,6 @@ def main():
                         player_color=side_panel.settings.player_color,
                         search_mode="both",
                         depth=side_panel.settings.depth,
-                        time_seconds=side_panel.settings.time_seconds,
                         forced_jump=side_panel.settings.forced_jump,
                     )
                     game.set_board_flipped(side_panel.settings.board_flipped)
@@ -82,7 +80,6 @@ def main():
                         player_color=side_panel.settings.player_color,
                         search_mode="both",
                         depth=side_panel.settings.depth,
-                        time_seconds=side_panel.settings.time_seconds,
                         forced_jump=side_panel.settings.forced_jump,
                     )
                     game.set_board_flipped(side_panel.settings.board_flipped)

@@ -24,7 +24,6 @@ DISABLED_BORDER = (92, 94, 84)
 class PanelSettings:
     player_color: PieceColor = PieceColor.BLACK
     depth: int = 4
-    time_seconds: float = 1.0
     board_flipped: bool = False
     forced_jump: bool = True
 
@@ -157,10 +156,9 @@ class SidePanel:
         self.black_icon = self._load_image("Stone_Black_x2.png", (42, 42))
         self.white_icon = self._load_image("Stone_White_x2.png", (42, 42))
         self.depth_icon = self._load_image("Stone_Black_2_x2.png", (36, 36))
-        self.time_icon = self._load_image("Stone_White_2_x2.png", (36, 36))
 
         self.color_buttons = self._build_color_buttons()
-        self.depth_input, self.time_input = self._build_input_fields()
+        self.depth_input = self._build_input_fields()
         self.forced_jump_button = self._build_forced_jump_button()
         self.start_button = self._build_start_button()
         self.flip_button = self._build_flip_button()
@@ -168,7 +166,6 @@ class SidePanel:
 
     def _clear_input_focus(self):
         self.depth_input.set_active(False)
-        self.time_input.set_active(False)
 
     def set_settings_locked(self, locked):
         self.settings_locked = locked
@@ -188,8 +185,8 @@ class SidePanel:
         width = PANEL_WIDTH - 40
         height = 52
         return [
-            SpriteButton((x, y, width, height), "Sort", PieceColor.BLACK, self.black_icon),
-            SpriteButton((x, y + 68, width, height), "Hvid", PieceColor.WHITE, self.white_icon),
+            SpriteButton((x, y, width, height), "Black", PieceColor.BLACK, self.black_icon),
+            SpriteButton((x, y + 68, width, height), "White", PieceColor.WHITE, self.white_icon),
         ]
 
     def _build_input_fields(self):
@@ -197,9 +194,8 @@ class SidePanel:
         y = 370
         width = PANEL_WIDTH - 40
         height = 42
-        depth_field = SpriteInputField((x, y, width, height), "Dybde", str(self.settings.depth), self.depth_icon)
-        time_field = SpriteInputField((x, y + 78, width, height), "Tid i sekunder", f"{self.settings.time_seconds:.1f}", self.time_icon)
-        return depth_field, time_field
+        depth_field = SpriteInputField((x, y, width, height), "Depth", str(self.settings.depth), self.depth_icon)
+        return depth_field
 
     def _build_forced_jump_button(self):
         x = self.board_width + 20
@@ -213,7 +209,7 @@ class SidePanel:
         y = 472
         width = PANEL_WIDTH - 40
         height = 44
-        return SpriteButton((x, y, width, height), "Start spil", "start")
+        return SpriteButton((x, y, width, height), "Start", "start")
 
     def _build_flip_button(self):
         x = self.board_width + 20
@@ -227,7 +223,7 @@ class SidePanel:
         y = 576
         width = PANEL_WIDTH - 40
         height = 44
-        return SpriteButton((x, y, width, height), "Genstart spil", "restart")
+        return SpriteButton((x, y, width, height), "Restart", "restart")
 
     def _apply_depth_text(self):
         try:
@@ -238,17 +234,6 @@ class SidePanel:
         depth = max(1, min(20, depth))
         self.settings.depth = depth
         self.depth_input.text = str(depth)
-        return True
-
-    def _apply_time_text(self):
-        try:
-            time_seconds = float(self.time_input.text)
-        except ValueError:
-            return False
-
-        time_seconds = max(0.1, min(60.0, time_seconds))
-        self.settings.time_seconds = time_seconds
-        self.time_input.text = f"{time_seconds:.2f}".rstrip("0").rstrip(".")
         return True
 
     def draw(self, win):
@@ -262,9 +247,9 @@ class SidePanel:
         self._draw_text(win, "Menu", self.title_font, TEXT_COLOR, self.board_width + 20, 24)
 
         if self.settings_locked:
-            self._draw_text(win, "Laast mens spillet koerer", self.meta_font, MUTED_TEXT_COLOR, self.board_width + 20, 64)
+            self._draw_text(win, "Locked while game is running", self.meta_font, MUTED_TEXT_COLOR, self.board_width + 20, 64)
 
-        self._draw_text(win, "Spillerfarve", self.header_font, TEXT_COLOR, self.board_width + 20, 88)
+        self._draw_text(win, "Player color", self.header_font, TEXT_COLOR, self.board_width + 20, 88)
         for index, button in enumerate(self.color_buttons):
             selected = self.settings.player_color == button.value
             button.draw(
@@ -275,7 +260,7 @@ class SidePanel:
                 disabled=self.settings_locked,
             )
 
-        self._draw_text(win, "AI indstillinger", self.header_font, TEXT_COLOR, self.board_width + 20, 262)
+        self._draw_text(win, "Settings", self.header_font, TEXT_COLOR, self.board_width + 20, 262)
         self.forced_jump_button.label = "Forced jump: ON" if self.settings.forced_jump else "Forced jump: OFF"
         self.forced_jump_button.draw(
             win,
@@ -284,7 +269,6 @@ class SidePanel:
             disabled=self.settings_locked,
         )
         self.depth_input.draw(win, self.meta_font, self.body_font, disabled=self.settings_locked)
-        self.time_input.draw(win, self.meta_font, self.body_font, disabled=self.settings_locked)
 
         if self.start_button_visible:
             self.start_button.draw(win, self.body_font)
@@ -315,15 +299,6 @@ class SidePanel:
                 self._clear_input_focus()
                 return "panel"
             self.depth_input.set_active(True)
-            self.time_input.set_active(False)
-            return "settings"
-
-        if self.time_input.contains(pos):
-            if self.settings_locked:
-                self._clear_input_focus()
-                return "panel"
-            self.time_input.set_active(True)
-            self.depth_input.set_active(False)
             return "settings"
 
         if self.forced_jump_button.contains(pos):
@@ -361,7 +336,6 @@ class SidePanel:
             if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_TAB):
                 self._apply_depth_text()
                 self.depth_input.set_active(False)
-                self.time_input.set_active(True)
                 return True
             if event.key == pygame.K_ESCAPE:
                 self._apply_depth_text()
@@ -369,20 +343,6 @@ class SidePanel:
                 return True
             if consumed:
                 self._apply_depth_text()
-                return True
-
-        if self.time_input.active:
-            consumed = self.time_input.handle_key(event)
-            if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_TAB):
-                self._apply_time_text()
-                self.time_input.set_active(False)
-                return True
-            if event.key == pygame.K_ESCAPE:
-                self._apply_time_text()
-                self.time_input.set_active(False)
-                return True
-            if consumed:
-                self._apply_time_text()
                 return True
 
         return False

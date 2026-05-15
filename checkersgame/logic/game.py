@@ -29,7 +29,6 @@ class Game:
         self.player_color = PieceColor.BLACK
         self.search_mode = "both"
         self.search_depth = 4
-        self.search_time_seconds = 1.0
         self.force_capture = True
         self.game_status = None  # None, 'WHITE WINS', 'BLACK WINS', 'STALEMATE'
         self.repetition_counts = {}
@@ -58,11 +57,10 @@ class Game:
     def set_board_flipped(self, board_flipped):
         self.board_flipped = board_flipped
 
-    def set_ai_preferences(self, player_color, search_mode, depth, time_seconds, forced_jump=True):
+    def set_ai_preferences(self, player_color, search_mode, depth, forced_jump=True):
         self.player_color = player_color
         self.search_mode = search_mode
         self.search_depth = depth
-        self.search_time_seconds = time_seconds
         self.force_capture = forced_jump
         self.awaiting_start = not self.has_started and self.player_color == PieceColor.WHITE
 
